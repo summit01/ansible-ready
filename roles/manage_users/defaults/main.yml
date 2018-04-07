@@ -1,0 +1,6 @@
+---
+# defaults file for manage_users
+group_per_user_create: false
+new_groups_to_be_created: ['grp1', 'grp2']
+users_default_group: 'grp1'
+users_to_be_deleted: ['test1','test2','test3']

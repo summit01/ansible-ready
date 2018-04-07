@@ -1,0 +1,10 @@
+---
+jenkins_repo: https://pkg.jenkins.io/redhat/jenkins.repo
+jenkins_repo_key: https://pkg.jenkins.io/redhat/jenkins.io.key
+jenkins_pkg_url: https://pkg.jenkins.io/redhat
+jenkins_init_file: /etc/sysconfig/jenkins
+jenkins_http_port_param: JENKINS_PORT
+jenkins_java_options_env_var: JENKINS_JAVA_OPTIONS
+j_rpm: 
+  - jdk-8u161.rpm
+j_rpm_dir: /tmp

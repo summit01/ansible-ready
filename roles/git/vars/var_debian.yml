@@ -1,0 +1,11 @@
+---
+  src_install:
+    - build-essential
+    - libssl-dev
+    - libcurl4-gnutls-dev
+    - libexpat1-dev
+    - gettext
+    - unzip
+  d_dir: ~/Install
+  version: 2.16.2
+  d_url: "https://github.com/git/git/archive/v{{version}}.tar.gz"

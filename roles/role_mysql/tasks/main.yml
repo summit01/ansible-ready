@@ -1,0 +1,17 @@
+---
+# Variable configuration
+- include_vars: variable.yml
+
+# Installation tasks
+- include_tasks: deb_sql.yml
+  when: ansible_os_family == 'Debian'
+  static: no
+
+- include_tasks: redhat_sql.yml
+  when: ansible_os_family == 'RedHat'
+  static: no
+
+- name: Check if MySQL is already installed
+  set_fact:
+  mysql__packages_install: "{{ (deb_mysql_installed is defined and deb_mysql_installed.changed)
+    or (rh_mysql_installed is defined and rh_mysql_installed.changed) }}"

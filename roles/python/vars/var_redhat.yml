@@ -1,0 +1,12 @@
+repo: "https://centos7.iuscommunity.org/ius-release.rpm"
+
+tools:
+  - "@Development tools"
+  - "yum-utils"
+  - "python36u"
+  - "python36u-pip"
+  - "python36u-devel"
+
+cmd:
+  - python3.6 --version
+  - python3.6 -m venv my_env

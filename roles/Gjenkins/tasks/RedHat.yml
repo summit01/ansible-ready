@@ -1,0 +1,64 @@
+---
+- name: Ensure dependencies are installed.
+  yum:
+    name:
+      - curl 
+      - libselinux-python
+      - initscripts
+      - wget
+    state: present
+
+- name: Check if Java already installed
+  stat: path=/usr/bin/java
+  register: j_install
+
+- name: Copy Java package from local to target server
+  copy: src="{{item}}" dest="{{j_rpm_dir}}"
+  with_items: "{{j_rpm}}"
+  when: j_install.stat.exists == false
+
+- name: Installing Java
+  yum: name={{j_rpm_dir}}/{{item}} state=present
+  with_items: "{{j_rpm}}"
+  when: j_install.stat.exists == false
+
+- name: Set JAVA_HOME environmental variable in rc.local
+  lineinfile:
+    path: /etc/rc.local
+    line: 'export JAVA_HOME=”/usr/java/latest'
+    state: present
+
+- name: Setting alternatives for java
+  alternatives: 
+    name="{{item.key}}"
+    link="{{item.value}}"
+    path={{alternate_java}}/{{item.key}}
+    priority=20000
+  with_dict: "{{alternatives_java}}"
+
+- name: Ensure Jenkins repo is installed.
+  get_url:
+    url: "{{ jenkins_repo_url }}"
+    dest: /etc/yum.repos.d/jenkins.repo
+  when: jenkins_repo != ''
+
+- name: Add Jenkins repo GPG key.
+  rpm_key:
+    state: present
+    key: "{{ jenkins_repo_key }}"
+
+- name: Download Jenkins
+  copy: src=jenkins-2.89.4-1.1.rpm dest="{{j_rpm_dir}}"
+
+- name: Check if jenkins has been downloaded
+  stat:
+    path: "/tmp/{{ jenkins_version }}"
+  register: jenkins_path
+  when: jenkins_version is defined
+
+- name: Install jenkins 
+  yum:
+    name: "/tmp/{{ jenkins_version }}"
+    state: present
+  when: jenkins_version is defined and jenkins_path.stat.exists
+  notify: start jenkins

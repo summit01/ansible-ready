@@ -1,0 +1,28 @@
+---
+# Variables 
+tools:
+  - unzip 
+  - git
+ant_version: ant-1.10.2 
+maven_version: maven-3.5.2 
+apps_dir: /root/install
+app_url:
+  - "http://ftp.wayne.edu/apache//ant/binaries/apache-ant-1.10.2-bin.zip"
+  - "http://mirrors.gigenet.com/apache/maven/maven-3/3.5.2/binaries/apache-maven-3.5.2-bin.tar.gz"
+
+install_dir:
+  /usr/local/ant: "apache-ant-1.10.2-bin.zip"
+  /usr/local/maven: "apache-maven-3.5.2-bin.tar.gz"
+
+apps_bin: 
+  - /usr/local/bin/ant
+  - /usr/local/bin/maven
+
+local_dir:
+  - install_path: "/usr/local/ant/apache-{{ant_version}}/bin/ant"
+    bin_path:
+      - "/usr/bin/ant"
+  - install_path: "/usr/local/maven/apache-{{maven_version}}/bin/mvn"
+    bin_path:
+      - "/usr/bin/mvn"
+  

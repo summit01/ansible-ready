@@ -1,0 +1,19 @@
+# ---
+# src_install:
+#   - "@Development tools"
+#   - gettext-devel
+#   - openssl-devel 
+#   - perl-CPAN
+#   - perl-devel
+#   - zlib-devel
+#   - unzip
+
+# d_dir: ~/Install
+
+# version: 2.16.2
+# #https://github.com/git/git/archive/v2.16.2.tar.gz
+# d_url: "https://github.com/git/git/archive/v{{version}}.tar.gz"
+
+# src_install_cmd:
+#   - make configure
+#   - ./configure --prefix=/usr/local

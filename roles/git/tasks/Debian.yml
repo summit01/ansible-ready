@@ -1,0 +1,60 @@
+---
+ - name: Check if Git is already installed
+   stat: path=/usr/local/bin/git
+   register: git_installed
+
+ - name: Check if download directory created
+   stat: path={{d_dir}}
+   register: download_dir
+
+ - name: Update Cache
+   apt:
+     update_cache=yes
+     cache_valid_time=36000
+
+ - name: Installing Prequisites to install Git from source
+   apt:
+     name={{item}}
+     state=present
+   with_items: "{{src_install}}"
+   when: src_install is defined and src_install and git_installed.stat.exists == false
+
+ - name: Create Directory to download binaries
+   file:
+     path={{d_dir}}
+     state=directory
+     owner=root
+     group=root
+     mode=0755
+   when: 'd_dir is defined and d_dir and download_dir.stat.exists == false'
+
+ - name: Download git from source
+   get_url:
+     dest="{{d_dir}}"
+     url="{{item}}"
+     mode=0644
+   with_items: "{{d_url}}"
+   when: git_installed.stat.exists == false
+  
+ - name: Unarchiving git tarball
+   unarchive:
+     src: "{{d_dir}}/git-{{version}}.tar.gz"
+     dest: "{{d_dir}}"
+     remote_src: yes 
+   when: version is defined and git_installed.stat.exists == false
+
+ - name: Build Git step1 from source package 
+   make:
+     chdir: "{{d_dir}}/git-{{version}}"
+     target: all
+     params:
+       prefix=/usr/local
+   when: git_installed.stat.exists == false
+
+ - name: Build Git step2 from source package 
+   make:
+     chdir: "{{d_dir}}/git-{{version}}"
+     target: install
+     params:
+       prefix=/usr/local
+   when: git_installed.stat.exists == false

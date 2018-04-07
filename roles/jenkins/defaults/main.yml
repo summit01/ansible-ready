@@ -1,0 +1,14 @@
+---
+# defaults file for roles/jenkins
+j_rpm_dir: /root/j_install
+j_rpm: 
+  - jdk-8u161.rpm
+  - jenkins-2.89.4-1.1.rpm
+
+alter_java: /usr/java/latest/bin
+
+alternatives_java:
+  java: /usr/bin/java
+  javac: /usr/bin/javac
+ # jar: /usr/bin/jar
+    

@@ -1,0 +1,20 @@
+---
+- name: Check if PHP is already installed
+  stat: path=/usr/bin/php72
+  register: chk_php_install
+
+- name:  Install and enable EPEL and Remi repository
+  yum:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - "{{repo_redhat}}"
+
+- name: Install php72 
+  yum: name={{item}} enablerepo={{php_repo}} state=present
+  with_items:
+    - "{{pkg_php_rhel}}"
+  register: rh_php_install
+- debug: 
+    var=rh_php_install.changed  
+  

@@ -1,0 +1,12 @@
+---
+# tasks file for roles/workstation
+- name: Supported plateform
+  assert: { that: "ansible_os_family in [ 'Debian', 'RedHat' ]" }
+
+- include_tasks: RedHat.yml
+  when: ansible_os_family == 'RedHat'
+
+- include_tasks: Debian.yml
+  when: ansible_os_family == 'Debian'
+
+  

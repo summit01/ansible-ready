@@ -1,0 +1,55 @@
+---
+  - name: Check if Git is already installd
+    stat: path=/usr/local/bin/git
+    register: git_installed
+
+  - name: Check if download directory exists
+    stat: path={{d_dir}}
+    register: install
+    when: d_dir is defined
+
+  - name: Install Git from repo 
+    yum: name=git state=present
+
+  - name: Installing Perquisites to install git from source
+    yum:
+      name={{item}}
+      state=present
+    with_items: "{{src_install}}"
+    when: 'src_install is defined and git_installed.stat.exists == false'
+
+  - name: Create directory to download binaries
+    file:
+      path={{d_dir}}
+      state=directory
+      owner=root
+      group=root
+      mode=0755
+    when: 'd_dir is defined and install.stat.exists == false'
+
+  - name: Download git from source
+    get_url:
+      dest="{{d_dir}}"
+      url="{{item}}"
+      mode=0644
+    with_items: "{{d_url}}"
+    when: d_dir is defined and install.stat.exists == false
+
+  - name: Unarchiving git tarball
+    unarchive:
+      src: "{{d_dir}}/git-{{version}}.tar.gz"
+      dest: "{{d_dir}}"
+      remote_src: yes 
+    when: version is defined
+  
+  - name: build git from source package
+    command: "{{item}} chdir={{d_dir}}/git-{{version}}"
+    with_items:
+      - "{{src_install_cmd}}"
+    when: src_install_cmd is defined and src_install_cmd != '' and git_installed.stat.exists == false
+  
+  - name: Install git from source package 
+    make:
+      chdir: "{{d_dir}}/git-{{version}}"
+      target: install
+    when: 'src_install_cmd is defined and git_installed.stat.exists == false'

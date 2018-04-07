@@ -1,0 +1,23 @@
+---
+# defaults file for php_nginx_sql_wordpress
+pkg_php:
+  - php
+  - php-fpm
+  - php-mysql
+  - php-xml
+
+pkg_remove:
+  - apache2
+
+pkg_php_rhel:
+  - php72
+  - php72-php-fpm
+  - php72-php-mysql
+  - php72-php-xml
+
+# RHEL Variables 
+repo_redhat:
+  - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+  - http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+
+php_repo: "epel,remi,remi-php72"

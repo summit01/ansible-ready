@@ -1,0 +1,54 @@
+---
+# Variables
+- name: OS variables
+  include_vars: "{{ ansible_os_family }}_vars.yml"
+
+- name: Set Jenkins repo url
+  set_fact:
+    jenkins_repo_url: "{{ jenkins_repo }}"
+  when: jenkins_repo_url is not defined
+
+- name: Set Jenkins repo key url
+  set_fact:
+    jenkins_repo_key_url: "{{ jenkins_repo_key }}"
+  when: jenkins_repo_key_url is not defined
+
+# Setup tasks
+- include_tasks: Debian.yml
+  when: ansible_os_family == 'Debian'
+
+- include_tasks: RedHat.yml
+  when: ansible_os_family == 'RedHat'
+
+# Configure Jenkins init settings.
+- include_tasks: init.yml
+
+# Make sure Jenkins starts, then configure Jenkins.
+- name: Ensure Jenkins is started and runs on startup.
+  service: name=jenkins state=started enabled=yes
+
+- name: Wait for Jenkins to start up before proceeding.
+  shell: "curl -D - --silent --max-time 5 http://{{ jenkins_hostname }}:{{ jenkins_http_port }}/cli/"
+  register: result
+  until: (result.stdout.find("403 Forbidden") != -1) or (result.stdout.find("200 OK") != -1) and (result.stdout.find("Please wait while") == -1)
+  retries: "{{ jenkins_connection_retries }}"
+  delay: "{{ jenkins_connection_delay }}"
+  changed_when: false
+  check_mode: no
+
+- debug: var=result
+
+- name: Get the jenkins-cli jarfile from the Jenkins server.
+  get_url:
+    url: "http://{{ jenkins_hostname }}:{{ jenkins_http_port }}/jnlpJars/jenkins-cli.jar"
+    dest: "{{ jenkins_jar_location }}"
+  register: jarfile_get
+  until: "'OK' in jarfile_get.msg or 'file already exists' in jarfile_get.msg"
+  retries: 5
+  delay: 10
+  check_mode: no
+
+- debug: var=jarfile_get
+
+# Update Jenkins and install configured plugins.
+- include_tasks: plugins.yml

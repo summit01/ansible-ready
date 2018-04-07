@@ -1,0 +1,84 @@
+---
+  # Example playbook that shows how to create users from the generated ansible variable file   
+      - name: Load passwords from vault
+        include_vars: user_passwords.yml
+  
+      - name: Create Groups 
+        group:
+          name: "{{ item }}"
+          state: present
+        with_items:
+          - "{{ new_groups_to_be_created }}"
+        when: new_groups_to_be_created is defined and new_groups_to_be_created
+  
+      - name: Create users
+        user: 
+          name="{{item.key}}" 
+          password="{{item.value}}" 
+          shell="/bin/bash" 
+          update_password=on_create
+          group="{{ item.key if group_per_user_create else users_default_group }}"
+          groups=grp1,grp2
+          append=yes
+        with_dict: "{{ user_passwords }}"
+        register: user_results
+      - debug:
+          var: user_results
+        
+      - name: Create group per user
+        group:
+          name: "{{ item.key }}"
+          state: present
+        with_dict: "{{ user_passwords }}"
+        when: group_per_user_create
+  
+      - name: Set user's default group
+        group:
+          name: "{{ users_default_group }}"
+          state: present
+        when: group_per_user_create == false
+  
+      - name: "Add SSH keys to users"
+        authorized_key:
+          user: "{{ item.key }}"
+          key: "{{ key1 }}"
+          state: present
+          exclusive: "{{ item.key.exclusive | default('no') }}"
+        with_dict: "{{ user_passwords }}"
+        when: key1 is defined and key1
+
+      - name: "Add SSH keys to vagrant"
+        authorized_key:
+          user: 'vagrant'
+          key: "{{ key1 }}"
+          state: present
+        
+      - name: "Secure the users SSH Directory"
+        file:
+          dest: "{{ '/home/%s' % item.key }}/.ssh"
+          state: directory
+          mode: 0700
+        with_dict: "{{ user_passwords }}"
+  
+      - name: Force password renewal for newly created users
+        command: chage -d 0 {{item.item.key}} # item.item is the key/value pair from the dict in the previous task
+        when: item.changed
+        with_items: "{{ user_results.results }}"
+  
+      - name: Delete users
+        user:
+          name: "{{item}}"
+          state: absent
+          remove: yes 
+        with_items:
+          - "{{ users_to_be_deleted }}"
+        when: users_to_be_deleted is defined and users_to_be_deleted
+  
+      - name: Delete old groups 
+        group:
+          name: 
+            - "{{item}}"
+          state: absent
+        with_items:
+          - "{{users_to_be_deleted}}"
+        when: users_to_be_deleted is defined and users_to_be_deleted

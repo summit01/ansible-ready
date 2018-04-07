@@ -1,0 +1,14 @@
+---
+# Installation tasks.
+- include_tasks: Redhat.yml
+  when: ansible_os_family == 'RedHat'
+  static: no 
+
+- include_tasks: Debian.yml
+  when: ansible_os_family == 'Debian'
+  static: no
+
+- name: Check if PHP were installed.
+  set_fact:
+    php_install_pkg: "{{ (rh_php_install is defined and rh_php_install.changed)
+      or (deb_php_install is defined and deb_php_install.changed) }}"

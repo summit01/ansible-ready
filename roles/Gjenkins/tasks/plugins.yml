@@ -1,0 +1,76 @@
+---
+- name: Check admin password file exists.
+  stat:
+    path=/var/lib/jenkins/secrets/initialAdminPassword
+  register: adminfile
+  when: jenkins_admin_password_file is defined
+
+- debug: var=adminfile
+
+- name: Get Jenkins admin password from file.
+  slurp:
+    src: "{{ jenkins_admin_password_file }}"
+  register: adminpasswordfile
+  no_log: True
+  when: adminfile.stat.exists == true
+
+- debug:
+    msg: "{{ adminpasswordfile['content'] | b64decode | replace('\n', '')}}"
+  when: adminfile.stat.exists == true
+
+
+- name: Set Jenkins admin password fact.
+  set_fact:
+    jenkins_admin_password: "{{ adminpasswordfile['content'] | b64decode | replace('\n', '') }}"
+  no_log: True
+  when: adminfile.stat.exists == true
+
+# Update Jenkins so that plugin updates don't fail.
+- name: Create update directory
+  file:
+    path: "{{ jenkins_home }}/updates"
+    state: directory
+    owner: jenkins
+    group: jenkins
+
+- name: Download current plugin updates from Jenkins update site
+  get_url:
+    url: http://updates.jenkins-ci.org/update-center.json
+    dest: "{{ jenkins_home}}/updates/default.json"
+    owner: jenkins
+    group: jenkins
+    mode: 0440
+
+- name: Remove first and last line from json file
+  replace:
+    path: "{{ jenkins_home }}/updates/default.json"
+    regexp: "1d;$d"
+
+
+- name: Install Jenkins plugins using password.
+  jenkins_plugin:
+    name: "{{ item }}"
+    jenkins_home: "{{ jenkins_home }}"
+    url_username: "{{ jenkins_admin_username }}"
+    url_password: "{{ jenkins_admin_password }}"
+    state: "{{ jenkins_plugins_state }}"
+    timeout: "{{ jenkins_plugin_timeout }}"
+    updates_expiration: "{{ jenkins_plugin_updates_expiration }}"
+    url: "http://{{ jenkins_hostname }}:{{ jenkins_http_port }}"
+  with_items: "{{ jenkins_plugins }}"
+  when: jenkins_admin_newpassword == ""
+  notify: restart jenkins
+
+- name: Install Jenkins plugins using new password.
+  jenkins_plugin:
+    name: "{{ item }}"
+    jenkins_home: "{{ jenkins_home }}"
+    url_username: "{{ jenkins_admin_username }}"
+    url_password: "{{ jenkins_admin_newpassword }}"
+    state: "{{ jenkins_plugins_state }}"
+    timeout: "{{ jenkins_plugin_timeout }}"
+    updates_expiration: "{{ jenkins_plugin_updates_expiration }}"
+    url: "http://{{ jenkins_hostname }}:{{ jenkins_http_port }}"
+  with_items: "{{ jenkins_plugins }}"
+  when: jenkins_admin_newpassword != ""
+  notify: restart jenkins

@@ -1,0 +1,54 @@
+---
+# tasks file for roles/jenkins
+- name: Check if Java already installed
+  stat: path=/usr/bin/java
+  register: j_install
+
+- name: Check if j_install directory already exist
+  stat: path="{{j_rpm_dir}}"
+  register: j_path
+- debug: var=j_path
+
+- name: Create a directory to copy Java and Jenkins into 
+  file:
+    path: "{{j_rpm_dir}}"
+    state: directory
+    owner: root 
+    group: root 
+    mode: 0755 
+  when: j_path.stat.exists == false
+
+- name: Copy Java and Jenkins package from local to target server
+  copy: src="{{item}}" dest="{{j_rpm_dir}}"
+  with_items: "{{j_rpm}}"
+  register: _rpm
+
+- name: Adding Jenkins repo 
+  get_url: 
+    url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+    dest: /etc/yum.repos.d/jenkins.repo
+
+- name: Import jenkins rpm signing key 
+  rpm_key:
+    state: present
+    key: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+
+- name: Installing Java & Jenkins
+  yum: name={{j_rpm_dir}}/{{item}} state=present
+  with_items: "{{j_rpm}}"
+  when: j_install.stat.exists == false
+  notify: start jenkins
+
+- name: Set JAVA_HOME environmental variable in rc.local
+  lineinfile:
+    path: /etc/rc.local
+    line: 'export JAVA_HOME=”/usr/java/latest'
+    state: present
+
+- name: Setting alternatives for java
+  alternatives: 
+    name="{{item.key}}"
+    link="{{item.value}}"
+    path={{alter_java}}/{{item.key}}
+    priority=20000
+  with_dict: "{{alternatives_java}}"

@@ -1,0 +1,20 @@
+---
+# vars file for roles/role_mysql
+# Debian mysql Variables
+deb_mysql_packages:
+  - python-mysqldb
+  - mysql-common
+  - mysql-server
+deb_mysql_daemon: mysql
+deb_mysql_dir: /var/lib/mysql
+
+# RedHat mysql Variables 
+rh_mysql_packages:
+  - MySQL-python
+  - mariadb
+  - mariadb-server
+  - mariadb-libs
+  - perl-DBD-MySQL
+
+mysql_repo:
+  - epel

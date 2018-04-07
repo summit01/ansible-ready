@@ -1,0 +1,8 @@
+---
+# defaults file for roles/workstation
+#https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-local-programming-environment-on-centos-7
+#https://www.tecmint.com/install-docker-and-learn-containers-in-centos-rhel-7-6/
+#https://www.digitalocean.com/community/tutorials/how-to-install-git-on-centos-7
+
+env_dir: ~/environments
+v_env: "{{env_dir}}/my_env"

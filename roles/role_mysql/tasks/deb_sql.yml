@@ -1,0 +1,31 @@
+---
+- name: Check if MySQL is already installed.
+  stat: path=/etc/init.d/mysql
+  register: deb_mysql_installed
+- debug: var=deb_mysql_installed
+
+- name: Update apt cache if MySQL is not installed
+  apt: 
+    update_cache=yes 
+    cache_valid_time=3600
+  when: deb_mysql_installed.stat.exists == false
+
+- name: Ensure following MySQl packages are installed
+  apt: name={{item}} state=present
+  with_items:
+    - "{{deb_mysql_packages}}"
+  register: deb_mysql_package_install
+- debug: var=deb_mysql_installed
+  
+- name: Ensure MySQl daemon is stopped after installation
+  service: name={{deb_mysql_daemon}} state=stopped
+  when: deb_mysql_installed.stat.exists == False
+
+- name: Delete the log files created by apt package after initial installation
+  file: 
+    path={{deb_mysql_dir}}/{{item}} 
+    state=absent
+  with_items:
+    - "ib_logfile0"
+    - "ib_logfile1"
+  when: deb_mysql_installed.stat.exists == false

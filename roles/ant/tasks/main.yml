@@ -1,0 +1,55 @@
+---
+# Playbook would fail if it runs on unsupported platform.
+- name: Supported platform
+  assert: { that: "ansible_os_family in [ 'Debian', 'RedHat' ]" }
+
+- name: Install common tools 
+  yum: name={{item}} state=present
+  with_items: "{{tools}}"
+
+- name: Check if Download directory exists
+  stat: path="{{apps_dir}}"
+  register: apps_path
+
+- name: Create Download Directory for app 
+  file:
+    path: "{{apps_dir}}"
+    state: directory
+    owner: root 
+    group: root 
+    mode: 0755
+  when: apps_path.stat.exists == false
+
+- name: Download Ant & Maven 
+  get_url:
+    dest="{{apps_dir}}"
+    url="{{ item }}"
+    mode=0644
+  with_items: "{{app_url}}"
+  when: apps_path.stat.exists == false
+
+- name: Create apps install directory
+  file:
+    state: directory
+    owner: root 
+    group: root 
+    mode: 0755
+    dest: "{{item.key}}"
+  with_dict: "{{install_dir}}"
+
+- name: unarchive apps 
+  unarchive:
+    remote_src=yes
+    src={{apps_dir}}/{{item.value}}
+    dest={{ item.key }}
+  with_dict: "{{install_dir}}"
+
+- name: Install apps bin
+  file:
+    state=link
+    force=true
+    src={{item.0.install_path}}
+    dest={{item.1}}
+  with_subelements:
+    - "{{local_dir}}"
+    - bin_path

@@ -1,0 +1,16 @@
+---
+# tasks file for roles/git
+- name: Supported platforms
+  assert: { that: "ansible_os_family in [ 'Debian', 'RedHat' ]"}
+
+- include_vars: var_redhat.yml
+  when: ansible_os_family == 'RedHat'
+
+- include_tasks: RedHat.yml
+  when: ansible_os_family == 'RedHat'
+
+- include_vars: var_debian.yml
+  when: ansible_os_family == 'Debian'
+
+- include_tasks: Debian.yml
+  when: ansible_os_family == 'Debian'

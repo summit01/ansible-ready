@@ -1,0 +1,7 @@
+---
+- name: Let the game begin
+  hosts: all
+  become: True
+  roles:
+    - git
+  

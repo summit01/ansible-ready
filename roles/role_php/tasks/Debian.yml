@@ -1,0 +1,32 @@
+---
+- name: Check if PHP is already installed.
+  stat: path=/usr/bin/php  # stat-check file path
+  register: php_installed
+- debug:
+    var: php_installed
+
+- name: Add the ondrej PHP PPA
+  apt_repository: repo='ppa:ondrej/php'
+  when: php_installed.stat.exists == false
+
+- name: Update the apt cache 
+  apt:
+    upgrade=yes
+    update_cache=yes
+    cache_valid_time=3600
+  when: php_installed.stat.exists == false
+    
+- name: Install php
+  apt: 
+    name="{{item}}"
+    state=present
+  with_items:
+    - "{{ pkg_php}}"
+  register: deb_php_install
+- debug: 
+    var=db_php_install.changed
+
+- name: Remove apache2
+  apt:
+    name="{{pkg_remove}}"
+    state=absent

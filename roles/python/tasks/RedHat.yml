@@ -1,0 +1,35 @@
+---
+- include_vars: var_redhat.yml
+
+- name: Check if my_env path exist
+  stat: path={{v_env}}
+  register: virt_env
+
+- name: Install repo
+  yum:
+    name={{item}}
+    state=latest
+  with_items: "{{repo}}"
+
+- name: Install Tools
+  yum:
+    name={{item}}
+    state=present
+  with_items: "{{tools}}"
+
+- name: Create virtual environment path
+  file:
+    path="{{env_dir}}"
+    state=directory
+    owner=root 
+    group=root 
+    mode=0755
+  when: env_dir is defined and virt_env.stat.exists == false
+
+- name: Check python version and create virtual environment 
+  command: "{{item}} chdir=~/environments"
+  with_items:
+    - "{{cmd}}"
+  when: virt_env.stat.exists == false
+  
+
